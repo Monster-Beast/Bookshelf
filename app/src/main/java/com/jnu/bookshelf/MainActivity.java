@@ -2,6 +2,7 @@ package com.jnu.bookshelf;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,13 +11,17 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.DownloadManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.View;
+import android.view.textclassifier.TextLinks;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -30,15 +35,26 @@ import com.jnu.bookshelf.Bean.Labelbean;
 import com.jnu.bookshelf.adapter.BookRecyclerViewAdapter;
 import com.jnu.bookshelf.adapter.DrawerRecyclerViewAdapter;
 import com.jnu.bookshelf.adapter.MySelectedListener;
+import com.jnu.bookshelf.utils.Constant;
+import com.jnu.bookshelf.utils.JsonParse;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;//滑动菜单
@@ -54,6 +70,26 @@ public class MainActivity extends AppCompatActivity {
 
     SearchView mSearchView;
     private ArrayList<Labelbean> labelbeans=new ArrayList<>();
+
+//   private MHandler mHandler;
+private final OkHttpClient client = new OkHttpClient.Builder()
+        //添加拦截器
+
+        .build();
+private static final int GET = 1;
+private Handler handler = new Handler(new Handler.Callback() {
+    @Override
+    public boolean handleMessage(@NonNull Message msg) {
+        switch (msg.what) {
+            case GET:
+                String string=(String) msg.obj;
+                parseJSONWithJSONObject(string);
+                break;
+
+        }
+        return true;
+    }
+});
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
         requestDataLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
 
         });
+//        mHandler=new MHandler();
         initData();
         initDrawer();
     }
@@ -106,11 +143,12 @@ public class MainActivity extends AppCompatActivity {
             //book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setLabel(data.getStringExtra("label"));
             book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setAddress(data.getStringExtra("address"));
             //book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setBookPic(data.getStringExtra("BookName"));
-            bookRecyclerViewAdapter.notifyDataSetChanged();
-            drawerRecyclerViewAdapter.notifyDataSetChanged();
-            initSpinner();
+
 
         }
+        bookRecyclerViewAdapter.notifyDataSetChanged();
+        drawerRecyclerViewAdapter.notifyDataSetChanged();
+        initSpinner();
 
     }
 
@@ -128,8 +166,59 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("bookPic",data.get(bookRecyclerViewAdapter.getContextMenuPosition()).getBookPic());
         requestDataLauncher.launch(intent);
    }
+    private void getDataFormGet() {
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                try {
+                    //原url失效，采用新的代替;
+                    String result = get(Constant.WEB_SITE+Constant.Request_Book_URL);
 
-    private void initData(){
+                    Message message = Message.obtain();
+                    message.what = GET;
+                    message.obj = result;
+                    handler.sendMessage(message);
+                    ;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+    private String get(String url) throws IOException {
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+        Response response = client.newCall(request).execute();
+        return response.body().string();
+    }
+    private void initData() {
+                getDataFormGet();
+        data.addAll(book);
+//        OkHttpClient okHttpCLient = new OkHttpClient();
+//        Request request = new Request.Builder()
+//                .url("http://192.168.137.1:8080/book/Book.json")
+//                .build();
+//
+//        Call call = okHttpCLient.newCall(request);
+//        //异步调用,并设置回调函数
+//        call.enqueue(new Callback() {
+//            @Override
+//            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+//                Log.i("monster","1");
+//            }
+//
+//            @Override
+//            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+//                String res = response.body().string();
+//                Message msg = Message.obtain();
+//                msg.what = 2;
+//                msg.obj = res;
+//                mHandler.sendMessage(msg);
+//            }
+//        });
+
 //        Log.i("monster",R.drawable.pingfan+"");
 //        Log.i("monster",R.drawable.rick+"");
 //        Log.i("monster",R.drawable.sanguo+"");
@@ -140,27 +229,119 @@ public class MainActivity extends AppCompatActivity {
 //        Log.i("monster",R.drawable.huozhe+"");
 //        Log.i("monster",R.drawable.anzhou+"");
 
-        try {
-            //打开存放在assets文件夹下面的json格式的文件并且放在文件输入流里面
-            InputStreamReader inputStreamReader = new InputStreamReader(getAssets().open("Book.json"), "UTF-8");
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            String line;
-            StringBuilder stringBuilder = new StringBuilder();
-            while((line = bufferedReader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-            bufferedReader.close();
-            inputStreamReader.close();
+//        try {
+//            //打开存放在assets文件夹下面的json格式的文件并且放在文件输入流里面
+//            InputStreamReader inputStreamReader = new InputStreamReader(getAssets().open("Book.json"), "UTF-8");
+//            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+//            String line;
+//            StringBuilder stringBuilder = new StringBuilder();
+//            while((line = bufferedReader.readLine()) != null) {
+//                stringBuilder.append(line);
+//            }
+//            bufferedReader.close();
+//            inputStreamReader.close();
+//
+//            //新建一个json对象，用它对数据进行操作
+//            JSONObject jsonObject = new JSONObject(stringBuilder.toString());
+//            //单独去一个值
+//            //Log.i("TESTJSON", "cat=" + jsonObject.getString("cat"));
+//            JSONArray jsonArray = jsonObject.getJSONArray("book");
+//            //取一个数组值
+//            for (int i = 0; i < jsonArray.length(); i++) {
+//                JSONObject object = jsonArray.getJSONObject(i);
+//                Bookbean bookbean=new Bookbean();
+//                bookbean.setBookName(object.getString("bookName"));
+//                bookbean.setAutherName(object.getString("autherName"));
+//                bookbean.setPublisher(object.getString("publisher"));
+//                bookbean.setPublishedDate(object.getString("publishedDate"));
+//                bookbean.setReadingStatus(object.getString("readingStatus"));
+//                bookbean.setAddress(object.getString("address"));
+//                if(object.getString("label").equals("")){
+//                    Labelbean labelbean=new Labelbean();
+//                    labelbean.setName("未分类");
+//                    bookbean.setLabel(labelbean);
+//                    int j=0;
+//                    for(;j<labelbeans.size();j++){
+//                        if(labelbeans.get(j).getName().equals("未分类")){
+//                            break;
+//                        };
+//                    }
+//                    if(j==labelbeans.size()){
+//                        labelbeans.add(labelbean);
+//                    }
+//                }else {
+//                    Labelbean labelbean=new Labelbean();
+//                    labelbean.setName(object.getString("label"));
+//                    bookbean.setLabel(labelbean);
+//                    int j=0;
+//                    for(;j<labelbeans.size();j++){
+//                        if(labelbeans.get(j).getName().equals(object.getString("label"))){
+//                            break;
+//                        };
+//                    }
+//                    if(j==labelbeans.size()){
+//                        labelbeans.add(labelbean);
+//                    }
+//                }
+//
+//                bookbean.setBookPic(object.getInt("bookPic"));
+//                book.add(bookbean);
+//            }
+//        } catch (IOException | JSONException e) {
+//            e.printStackTrace();
+//        }
 
-            //新建一个json对象，用它对数据进行操作
-            JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-            //单独去一个值
-            //Log.i("TESTJSON", "cat=" + jsonObject.getString("cat"));
-            JSONArray jsonArray = jsonObject.getJSONArray("book");
-            //取一个数组值
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject object = jsonArray.getJSONObject(i);
-                Bookbean bookbean=new Bookbean();
+
+    }
+//    private void downlodefile(Response response, String url, String fileName) {
+//        InputStream inputStream = null;
+//        byte[] buf = new byte[2048];
+//        int len = 0;
+//        FileOutputStream outputStream = null;
+//        try {
+//            inputStream = response.body().byteStream();
+//            //文件大小
+//            long total = response.body().contentLength();
+//            File file = new File(url, fileName);
+//            outputStream = new FileOutputStream(file);
+//            long sum = 0;
+//            while ((len = inputStream.read(buf)) != -1) {
+//                outputStream.write(buf, 0, len);
+//            }
+//            outputStream.flush();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        } finally {
+//            try {
+//                if (inputStream != null)
+//                    inputStream.close();
+//                if (outputStream != null)
+//                    outputStream.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
+//    class MHandler extends Handler{
+//        @Override
+//        public void dispatchMessage(@NonNull Message msg) {
+//            super.dispatchMessage(msg);
+//            switch (msg.what){
+//                case 2:
+//                    if(msg.obj!=null){
+//                        String vlResult=(String) msg.obj;
+//                        book= JsonParse.getInstance().getBookdata(vlResult);
+//                        data.addAll(book);
+//                    }
+//            }
+//        }
+//    }
+private void parseJSONWithJSONObject(String JsonData) {
+    try {
+        JSONArray jsonArray = new JSONObject(JsonData).getJSONArray("Book");
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject object = jsonArray.getJSONObject(i);
+            Bookbean bookbean=new Bookbean();
                 bookbean.setBookName(object.getString("bookName"));
                 bookbean.setAutherName(object.getString("autherName"));
                 bookbean.setPublisher(object.getString("publisher"));
@@ -195,22 +376,20 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                bookbean.setBookPic(object.getInt("bookPic"));
+                bookbean.setBookPic(object.getString("bookPic"));
                 book.add(bookbean);
-            }
-        } catch (IOException | JSONException e) {
-            e.printStackTrace();
+
         }
-        data.addAll(book);
-
+    } catch (Exception e) {
+        e.printStackTrace();
     }
-
+    data.addAll(book);
+}
     private void initRecycler(){
         recyclerView=findViewById(R.id.book_rl);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         bookRecyclerViewAdapter=new BookRecyclerViewAdapter(MainActivity.this,data);
         recyclerView.setAdapter(bookRecyclerViewAdapter);
-
         drawer_recyclerView=findViewById(R.id.drawer_rl);
         drawer_recyclerView.setLayoutManager(new LinearLayoutManager(this));
         drawerRecyclerViewAdapter=new DrawerRecyclerViewAdapter(MainActivity.this,labelbeans);
@@ -308,8 +487,9 @@ public class MainActivity extends AppCompatActivity {
                         drawerRecyclerViewAdapter.notifyDataSetChanged();
                     }
 
-
-
+                        bookRecyclerViewAdapter.notifyDataSetChanged();
+                        drawerRecyclerViewAdapter.notifyDataSetChanged();
+                        initSpinner();
                     }
                 }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
                     @Override

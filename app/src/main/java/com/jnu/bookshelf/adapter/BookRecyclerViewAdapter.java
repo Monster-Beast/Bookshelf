@@ -14,6 +14,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.jnu.bookshelf.Bean.Bookbean;
 
 import com.jnu.bookshelf.MainActivity;
@@ -46,8 +47,8 @@ public class BookRecyclerViewAdapter extends RecyclerView.Adapter<BookRecyclerVi
 
     @Override
     public void onBindViewHolder(@NonNull BookRecyclerViewAdapter.MyViewHolder holder, int position) {
-        holder.iv.setImageResource(data.get(position).getBookPic());
-
+        //holder.iv.setImageResource(data.get(position).getBookPic());
+        Glide.with(mContext).load(data.get(position).getBookPic()).into(holder.iv);
         holder.tv_bookname.setText(data.get(position).getBookName());
         holder.tv_authername.setText(data.get(position).getAutherName());
         holder.tv_publisher.setText(data.get(position).getPublisher());

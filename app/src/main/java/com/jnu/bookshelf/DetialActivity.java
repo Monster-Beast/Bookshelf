@@ -11,6 +11,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+
 public class DetialActivity extends AppCompatActivity {
 
     @Override
@@ -20,6 +22,7 @@ public class DetialActivity extends AppCompatActivity {
         init();
     }
     void init(){
+
         ImageView iv=findViewById(R.id.Dbook_iv);
         EditText bookName_et=findViewById(R.id.bookname_et);
         EditText authername_et=findViewById(R.id.authername_et);
@@ -68,7 +71,8 @@ public class DetialActivity extends AppCompatActivity {
         state_et.setText(intent.getStringExtra("readingStatus"));
         label_et.setText(intent.getStringExtra("label"));
         address_et.setText(intent.getStringExtra("address"));
-        iv.setImageResource(intent.getIntExtra("bookPic",2));
+        Glide.with(this).load(intent.getStringExtra("bookPic")).into(iv);
+        //iv.setImageResource(intent.getStringExtra("bookPic"));
 
     }
 }

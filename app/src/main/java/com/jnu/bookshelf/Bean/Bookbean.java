@@ -12,7 +12,7 @@ public class Bookbean implements Serializable {
     private String readingStatus;//阅读状态
     private Labelbean label;//标签
     private String address;//地址
-    private int bookPic;//图片
+    private String bookPic;//图片
 
     public String getBookName() {
         return bookName;
@@ -70,11 +70,11 @@ public class Bookbean implements Serializable {
         this.address = address;
     }
 
-    public int getBookPic() {
+    public String getBookPic() {
         return bookPic;
     }
 
-    public void setBookPic(int bookPic) {
+    public void setBookPic(String bookPic) {
         this.bookPic = bookPic;
     }
 }
