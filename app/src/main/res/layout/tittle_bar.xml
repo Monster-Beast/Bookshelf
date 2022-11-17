@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tittle_bar"
+    android:layout_height="50dp"
+    android:layout_width="match_parent"
+    android:layout_gravity="top"
+    android:orientation="horizontal">
+
+    <Button
+        android:id="@+id/bt_go_drawer"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_weight="1"
+        android:gravity="center"
+
+        android:background="@drawable/drawer_up" />
+
+    <Spinner
+        android:id="@+id/spinner"
+        android:layout_weight="3"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:background="#E5E5E5"
+        android:dropDownVerticalOffset="45dp"
+        android:spinnerMode="dropdown" />
+
+
+
+
+</LinearLayout>
