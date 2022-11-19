@@ -7,7 +7,7 @@
         "readingStatus": "",
         "label": "",
         "address": "",
-        "bookPic": "2131165398"
+        "bookPic": "http://192.168.137.1:8080/book/img/the_little_prince.jpeg"
     },
     {
         "bookName": "平凡的世界",
@@ -17,7 +17,7 @@
         "readingStatus": "",
         "label": "",
         "address": "",
-        "bookPic": 2131165402
+        "bookPic": "http://192.168.137.1:8080/book/img/pingfan.jpeg"
     },
     {
         "bookName": "瑞克与莫蒂",
@@ -27,7 +27,7 @@
         "readingStatus": "",
         "label": "",
         "address": "https://www.hdmoli.com/movie/index1543.html",
-        "bookPic": 2131165403
+        "bookPic": "http://192.168.137.1:8080/book/img/rick.jpeg"
     },
     {
         "bookName": "三国演义",
@@ -37,7 +37,7 @@
         "readingStatus": "",
         "label": "",
         "address": "",
-        "bookPic": 2131165404
+        "bookPic": "http://192.168.137.1:8080/book/img/sanguo.jpeg"
     },
     {
         "bookName": "水浒传",
@@ -47,7 +47,7 @@
         "readingStatus": "",
         "label": "",
         "address": "",
-        "bookPic": 2131165406
+        "bookPic": "http://192.168.137.1:8080/book/img/shuihu.jpeg"
     },
     {
         "bookName": "红楼梦",
@@ -57,7 +57,7 @@
         "readingStatus": "",
         "label": "",
         "address": "",
-        "bookPic": 2131165400
+        "bookPic": "http://192.168.137.1:8080/book/img/honglou.jpeg"
     },
     {
         "bookName": "西游记",
@@ -67,7 +67,7 @@
         "readingStatus": "",
         "label": "",
         "address": "",
-        "bookPic": 2131165407
+        "bookPic": "http://192.168.137.1:8080/book/img/xiyou.jpeg"
     },
     {
         "bookName": "三体（一）",
@@ -77,7 +77,7 @@
         "readingStatus": "",
         "label": "",
         "address": "",
-        "bookPic": 2131165405
+        "bookPic": "http://192.168.137.1:8080/book/img/santi.jpeg"
     },
     {
         "bookName": "活着",
@@ -87,7 +87,7 @@
         "readingStatus": "",
         "label": "",
         "address": "",
-        "bookPic": 2131165401
+        "bookPic": "http://192.168.137.1:8080/book/img/huozhe.jpeg"
     },
     {
         "bookName": "安卓移动开发基础",
@@ -97,7 +97,7 @@
         "readingStatus": "",
         "label": "",
         "address": "",
-        "bookPic": 2131165399
+        "bookPic": "http://192.168.137.1:8080/book/img/anzhou.jpeg"
     }
 ]
 }

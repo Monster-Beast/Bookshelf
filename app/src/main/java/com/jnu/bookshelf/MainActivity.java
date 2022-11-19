@@ -11,7 +11,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.app.DownloadManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -21,7 +21,6 @@ import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.View;
-import android.view.textclassifier.TextLinks;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -34,29 +33,28 @@ import com.jnu.bookshelf.Bean.Bookbean;
 import com.jnu.bookshelf.Bean.Labelbean;
 import com.jnu.bookshelf.adapter.BookRecyclerViewAdapter;
 import com.jnu.bookshelf.adapter.DrawerRecyclerViewAdapter;
-import com.jnu.bookshelf.adapter.MySelectedListener;
 import com.jnu.bookshelf.utils.Constant;
-import com.jnu.bookshelf.utils.JsonParse;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 
-import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
+
+
     private DrawerLayout drawerLayout;//滑动菜单
     private Button button_drawer;
     private TextView drawer_tvlabel;
@@ -67,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView,drawer_recyclerView;
     ActivityResultLauncher<Intent> requestDataLauncher;
     ArrayAdapter<String> starAdapter;
-
     SearchView mSearchView;
     private ArrayList<Labelbean> labelbeans=new ArrayList<>();
 
@@ -105,46 +102,66 @@ private Handler handler = new Handler(new Handler.Callback() {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode==RESULT_OK){
+        if(resultCode==RESULT_OK) {
 
-            book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setBookName(data.getStringExtra("BookName"));
-            book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setAutherName(data.getStringExtra("autherName"));
-            book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setPublisher(data.getStringExtra("publisher"));
-            book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setPublishedDate(data.getStringExtra("publishedDate"));
-            book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setReadingStatus(data.getStringExtra("readingStatus"));
-            if(data.getStringExtra("label").equals("")){
-                Labelbean labelbean=new Labelbean();
+            this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setBookName(data.getStringExtra("BookName"));
+            this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setAutherName(data.getStringExtra("autherName"));
+            this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setPublisher(data.getStringExtra("publisher"));
+            this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setPublishedDate(data.getStringExtra("publishedDate"));
+            this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setReadingStatus(data.getStringExtra("readingStatus"));
+            if (data.getStringExtra("label").equals("")) {
+                Labelbean labelbean = new Labelbean();
                 labelbean.setName("未分类");
-                book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setLabel(labelbean);
-                int j=0;
-                for(;j<labelbeans.size();j++){
-                    if(labelbeans.get(j).getName().equals("未分类")){
+                this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setLabel(labelbean);
+                int j = 0;
+                for (; j < labelbeans.size(); j++) {
+                    if (labelbeans.get(j).getName().equals("未分类")) {
                         break;
-                    };
+                    }
+                    ;
                 }
-                if(j==labelbeans.size()){
+                if (j == labelbeans.size()) {
                     labelbeans.add(labelbean);
                 }
-            }else {
-                Labelbean labelbean=new Labelbean();
+            } else {
+                Labelbean labelbean = new Labelbean();
                 labelbean.setName(data.getStringExtra("label"));
-                book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setLabel(labelbean);
-                int j=0;
-                for(;j<labelbeans.size();j++){
-                    if(labelbeans.get(j).getName().equals(data.getStringExtra("label"))){
+                this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setLabel(labelbean);
+                int j = 0;
+                for (; j < labelbeans.size(); j++) {
+                    if (labelbeans.get(j).getName().equals(data.getStringExtra("label"))) {
                         break;
-                    };
+                    }
+                    ;
                 }
-                if(j==labelbeans.size()){
+                if (j == labelbeans.size()) {
                     labelbeans.add(labelbean);
                 }
 
             }
             //book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setLabel(data.getStringExtra("label"));
-            book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setAddress(data.getStringExtra("address"));
+            this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setAddress(data.getStringExtra("address"));
             //book.get(bookRecyclerViewAdapter.getContextMenuPosition()).setBookPic(data.getStringExtra("BookName"));
-
-
+            int i = 0;
+            for (; i < book.size(); i++) {
+                if (this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).getId() == book.get(i).getId()) {
+                    Bookbean bookbean = new Bookbean();
+                    bookbean = this.data.get(bookRecyclerViewAdapter.getContextMenuPosition());
+                    book.set(i, bookbean);
+                    break;
+                }
+            }
+            if(i==book.size()){
+                Bookbean bookbean = new Bookbean();
+                bookbean = this.data.get(bookRecyclerViewAdapter.getContextMenuPosition());
+                bookbean.setId(book.size());
+                book.add(bookbean);
+            }
+        }
+        try {
+            Save();
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
         bookRecyclerViewAdapter.notifyDataSetChanged();
         drawerRecyclerViewAdapter.notifyDataSetChanged();
@@ -194,8 +211,8 @@ private Handler handler = new Handler(new Handler.Callback() {
         return response.body().string();
     }
     private void initData() {
-                getDataFormGet();
-        data.addAll(book);
+//                getDataFormGet();
+//                data.addAll(book);
 //        OkHttpClient okHttpCLient = new OkHttpClient();
 //        Request request = new Request.Builder()
 //                .url("http://192.168.137.1:8080/book/Book.json")
@@ -229,68 +246,69 @@ private Handler handler = new Handler(new Handler.Callback() {
 //        Log.i("monster",R.drawable.huozhe+"");
 //        Log.i("monster",R.drawable.anzhou+"");
 
-//        try {
-//            //打开存放在assets文件夹下面的json格式的文件并且放在文件输入流里面
-//            InputStreamReader inputStreamReader = new InputStreamReader(getAssets().open("Book.json"), "UTF-8");
-//            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-//            String line;
-//            StringBuilder stringBuilder = new StringBuilder();
-//            while((line = bufferedReader.readLine()) != null) {
-//                stringBuilder.append(line);
-//            }
-//            bufferedReader.close();
-//            inputStreamReader.close();
-//
-//            //新建一个json对象，用它对数据进行操作
-//            JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-//            //单独去一个值
-//            //Log.i("TESTJSON", "cat=" + jsonObject.getString("cat"));
-//            JSONArray jsonArray = jsonObject.getJSONArray("book");
-//            //取一个数组值
-//            for (int i = 0; i < jsonArray.length(); i++) {
-//                JSONObject object = jsonArray.getJSONObject(i);
-//                Bookbean bookbean=new Bookbean();
-//                bookbean.setBookName(object.getString("bookName"));
-//                bookbean.setAutherName(object.getString("autherName"));
-//                bookbean.setPublisher(object.getString("publisher"));
-//                bookbean.setPublishedDate(object.getString("publishedDate"));
-//                bookbean.setReadingStatus(object.getString("readingStatus"));
-//                bookbean.setAddress(object.getString("address"));
-//                if(object.getString("label").equals("")){
-//                    Labelbean labelbean=new Labelbean();
-//                    labelbean.setName("未分类");
-//                    bookbean.setLabel(labelbean);
-//                    int j=0;
-//                    for(;j<labelbeans.size();j++){
-//                        if(labelbeans.get(j).getName().equals("未分类")){
-//                            break;
-//                        };
-//                    }
-//                    if(j==labelbeans.size()){
-//                        labelbeans.add(labelbean);
-//                    }
-//                }else {
-//                    Labelbean labelbean=new Labelbean();
-//                    labelbean.setName(object.getString("label"));
-//                    bookbean.setLabel(labelbean);
-//                    int j=0;
-//                    for(;j<labelbeans.size();j++){
-//                        if(labelbeans.get(j).getName().equals(object.getString("label"))){
-//                            break;
-//                        };
-//                    }
-//                    if(j==labelbeans.size()){
-//                        labelbeans.add(labelbean);
-//                    }
-//                }
-//
-//                bookbean.setBookPic(object.getInt("bookPic"));
-//                book.add(bookbean);
-//            }
-//        } catch (IOException | JSONException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            //打开存放在assets文件夹下面的json格式的文件并且放在文件输入流里面
+            InputStreamReader inputStreamReader = new InputStreamReader(getAssets().open("Book.json"), "UTF-8");
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            String line;
+            StringBuilder stringBuilder = new StringBuilder();
+            while((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+            bufferedReader.close();
+            inputStreamReader.close();
 
+            //新建一个json对象，用它对数据进行操作
+            JSONObject jsonObject = new JSONObject(stringBuilder.toString());
+            //单独去一个值
+            //Log.i("TESTJSON", "cat=" + jsonObject.getString("cat"));
+            JSONArray jsonArray = jsonObject.getJSONArray("book");
+            //取一个数组值
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject object = jsonArray.getJSONObject(i);
+                Bookbean bookbean=new Bookbean();
+                bookbean.setId(i);
+                bookbean.setBookName(object.getString("bookName"));
+                bookbean.setAutherName(object.getString("autherName"));
+                bookbean.setPublisher(object.getString("publisher"));
+                bookbean.setPublishedDate(object.getString("publishedDate"));
+                bookbean.setReadingStatus(object.getString("readingStatus"));
+                bookbean.setAddress(object.getString("address"));
+                if(object.getString("label").equals("")){
+                    Labelbean labelbean=new Labelbean();
+                    labelbean.setName("未分类");
+                    bookbean.setLabel(labelbean);
+                    int j=0;
+                    for(;j<labelbeans.size();j++){
+                        if(labelbeans.get(j).getName().equals("未分类")){
+                            break;
+                        };
+                    }
+                    if(j==labelbeans.size()){
+                        labelbeans.add(labelbean);
+                    }
+                }else {
+                    Labelbean labelbean=new Labelbean();
+                    labelbean.setName(object.getString("label"));
+                    bookbean.setLabel(labelbean);
+                    int j=0;
+                    for(;j<labelbeans.size();j++){
+                        if(labelbeans.get(j).getName().equals(object.getString("label"))){
+                            break;
+                        };
+                    }
+                    if(j==labelbeans.size()){
+                        labelbeans.add(labelbean);
+                    }
+                }
+
+                bookbean.setBookPic(object.getString("bookPic"));
+                book.add(bookbean);
+            }
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+        }
+        data.addAll(book);
 
     }
 //    private void downlodefile(Response response, String url, String fileName) {
@@ -589,6 +607,32 @@ private void parseJSONWithJSONObject(String JsonData) {
             }
         }
 
+    }
+
+    private void Save()throws JSONException{
+        JSONArray array = new JSONArray();
+
+        for (Bookbean c : book)
+            array.put(c.toJSON());
+        Writer writer = null;
+        try {
+            OutputStream out = this.openFileOutput("Book.json",
+                    Context.MODE_PRIVATE);
+            writer = new OutputStreamWriter(out);
+            writer.write(array.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
 }
