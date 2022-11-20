@@ -47,6 +47,7 @@ import okhttp3.Response;
 
 public class DetialActivity extends AppCompatActivity {
     private ActivityResultLauncher Picturerequest;
+    private int id;
     ImageView iv;
     Uri uri;
     private final OkHttpClient client = new OkHttpClient.Builder().build();
@@ -134,6 +135,10 @@ public class DetialActivity extends AppCompatActivity {
                 intent1.putExtra("readingStatus",readingStatus);
                 intent1.putExtra("label",label);
                 intent1.putExtra("address",address);
+                intent1.putExtra("BookID",id);
+                if(uri!=null) {
+                    intent1.putExtra("bookPic", getRealPathFromURI(DetialActivity.this, uri));
+                }
                 OkHttpClient client = new OkHttpClient();
                 if(uri!=null) {
                     new Thread(){
@@ -212,6 +217,7 @@ public class DetialActivity extends AppCompatActivity {
             }
         });
         Intent intent=getIntent();
+        id=intent.getIntExtra("BookID",-1);
         bookName_et.setText(intent.getStringExtra("BookName"));
         authername_et.setText(intent.getStringExtra("autherName"));
         publisher_et.setText(intent.getStringExtra("publisher"));
@@ -219,7 +225,9 @@ public class DetialActivity extends AppCompatActivity {
         state_et.setText(intent.getStringExtra("readingStatus"));
         label_et.setText(intent.getStringExtra("label"));
         address_et.setText(intent.getStringExtra("address"));
-        Glide.with(this).load(intent.getStringExtra("bookPic")).into(iv);
+        if(intent.getStringExtra("bookPic")!=null){
+            Glide.with(this).load(intent.getStringExtra("bookPic")).into(iv);
+        }
         //iv.setImageResource(intent.getStringExtra("bookPic"));
 
     }

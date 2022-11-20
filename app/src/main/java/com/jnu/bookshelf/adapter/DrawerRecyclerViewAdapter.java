@@ -60,7 +60,7 @@ public class DrawerRecyclerViewAdapter extends RecyclerView.Adapter<DrawerRecycl
         return data.size();
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener{
+    public class MyViewHolder extends RecyclerView.ViewHolder {
         ImageView iv;
         TextView tv;
         public MyViewHolder(@NonNull View itemView) {
@@ -68,15 +68,10 @@ public class DrawerRecyclerViewAdapter extends RecyclerView.Adapter<DrawerRecycl
 
             iv=itemView.findViewById(R.id.label_iv);
             tv=itemView.findViewById(R.id.label_tv);
-            itemView.setOnCreateContextMenuListener(this);
+
         }
 
-        @Override
-        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-            Labelbean labelbean = data.get(getContextMenuPosition());
-            menu.setHeaderTitle(labelbean.getName());
-            ((MainActivity)mContext).CreateMenu(menu);
-        }
+
     }
 
 

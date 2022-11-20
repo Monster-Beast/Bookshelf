@@ -28,6 +28,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
@@ -125,8 +126,10 @@ private Handler handler = new Handler(new Handler.Callback() {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode==5) {
-
+        if(resultCode==5 && data.getIntExtra("BookID",-1)!=-1) {
+            if(data.getStringExtra("bookPic")!=null) {
+                this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setBookPic(data.getStringExtra("bookPic"));
+            }
             this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setBookName(data.getStringExtra("BookName"));
             this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setAutherName(data.getStringExtra("autherName"));
             this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setPublisher(data.getStringExtra("publisher"));
@@ -185,7 +188,57 @@ private Handler handler = new Handler(new Handler.Callback() {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        }else if(data!=null){
+        }else if(resultCode==5 && data.getIntExtra("BookID",-1)==-1){
+            Bookbean bookbean=new Bookbean();
+            if(data.getStringExtra("bookPic")!=null) {
+                bookbean.setBookPic(data.getStringExtra("bookPic"));
+            }
+            bookbean.setBookName(data.getStringExtra("BookName"));
+            bookbean.setAutherName(data.getStringExtra("autherName"));
+            bookbean.setPublisher(data.getStringExtra("publisher"));
+            bookbean.setPublishedDate(data.getStringExtra("publishedDate"));
+            bookbean.setReadingStatus(data.getStringExtra("readingStatus"));
+            bookbean.setAddress(data.getStringExtra("address"));
+            if (data.getStringExtra("label").equals("")) {
+                Labelbean labelbean = new Labelbean();
+                labelbean.setName("未分类");
+                bookbean.setLabel(labelbean);
+                int j = 0;
+                for (; j < labelbeans.size(); j++) {
+                    if (labelbeans.get(j).getName().equals("未分类")) {
+                        break;
+                    }
+                    ;
+                }
+                if (j == labelbeans.size()) {
+                    labelbeans.add(labelbean);
+                }
+            } else {
+                Labelbean labelbean = new Labelbean();
+                labelbean.setName(data.getStringExtra("label"));
+                bookbean.setLabel(labelbean);
+                int j = 0;
+                for (; j < labelbeans.size(); j++) {
+                    if (labelbeans.get(j).getName().equals(data.getStringExtra("label"))) {
+                        break;
+                    }
+                    ;
+                }
+                if (j == labelbeans.size()) {
+                    labelbeans.add(labelbean);
+                }
+
+            }
+            bookbean.setId(book.size());
+            book.add(bookbean);
+            try {
+                Save();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+        else if(data!=null){
             iv_ID.setImageURI(data.getData());
             SharedPreferences sp=MainActivity.this.getSharedPreferences("Data",Context.MODE_PRIVATE);
             SharedPreferences.Editor editor=sp.edit();
@@ -208,6 +261,7 @@ private Handler handler = new Handler(new Handler.Callback() {
     public void communication(){
 
         Intent intent =new Intent(MainActivity.this,DetialActivity.class);
+        intent.putExtra("BookID",data.get(bookRecyclerViewAdapter.getContextMenuPosition()).getId());
         intent.putExtra("BookName",data.get(bookRecyclerViewAdapter.getContextMenuPosition()).getBookName());
         intent.putExtra("autherName",data.get(bookRecyclerViewAdapter.getContextMenuPosition()).getAutherName());
         intent.putExtra("publisher",data.get(bookRecyclerViewAdapter.getContextMenuPosition()).getPublisher());
@@ -681,6 +735,16 @@ private void parseJSONWithJSONObject(String JsonData) {
 
     }
 
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+
+        if(item.getItemId()==2){
+            delBook(bookRecyclerViewAdapter.getContextMenuPosition());
+        }
+
+        return super.onContextItemSelected(item);
+    }
+
     public void CreateMenu(ContextMenu contextMenu) {
         int groupID = 0;
         int order = 0;
@@ -699,7 +763,26 @@ private void parseJSONWithJSONObject(String JsonData) {
         }
 
     }
-
+    private void delBook(int position){
+        int id=data.get(position).getId();
+        for(int i=0;i<book.size();i++){
+            if(id==book.get(i).getId()){
+                book.remove(i);
+                for(int j=i;j<book.size();j++){
+                    book.get(j).setId(j-1);
+                }
+                break;
+            }
+        }
+        try {
+            Save();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        bookRecyclerViewAdapter.notifyDataSetChanged();
+        drawerRecyclerViewAdapter.notifyDataSetChanged();
+        initSpinner();
+    }
     private void Save()throws JSONException{
         JSONArray array = new JSONArray();
 
