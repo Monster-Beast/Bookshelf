@@ -19,7 +19,8 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:textSize="20sp"
-        android:id="@+id/bookname_tv"/>
+        android:id="@+id/bookname_tv"
+        android:textColor="@color/black"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -30,12 +31,14 @@
                 android:layout_width="wrap_content"
                 android:textSize="11sp"
                 android:id="@+id/authername_tv"
+                android:textColor="@color/black"
                 />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:id="@+id/publisher_tv"
                 android:textSize="11sp"
+                android:textColor="@color/black"
                 />
             <LinearLayout
                 android:layout_width="match_parent"
@@ -48,7 +51,8 @@
                     android:layout_height="match_parent"
                     android:id="@+id/publishedDate_tv"
                     android:textSize="11sp"
-                    android:layout_gravity="end"/>
+                    android:layout_gravity="end"
+                    android:textColor="@color/black"/>
             </LinearLayout>
         </LinearLayout>
 

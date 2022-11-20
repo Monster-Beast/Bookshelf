@@ -46,7 +46,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class DetialActivity extends AppCompatActivity {
-    ActivityResultLauncher Picturerequest;
+    private ActivityResultLauncher Picturerequest;
     ImageView iv;
     Uri uri;
     private final OkHttpClient client = new OkHttpClient.Builder().build();
@@ -108,10 +108,11 @@ public class DetialActivity extends AppCompatActivity {
         EditText label_et=findViewById(R.id.label_et);
         EditText address_et=findViewById(R.id.address_et);
         Button bt_esc=findViewById(R.id.bt_esc);
+
         bt_esc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                DetialActivity.this.finish();
             }
         });
         Button bt_save=findViewById(R.id.bt_save);
@@ -205,7 +206,7 @@ public class DetialActivity extends AppCompatActivity {
 //                        }
 //                    });
                 }
-                setResult(RESULT_OK, intent1);
+                setResult(5, intent1);
                 finish();
 
             }

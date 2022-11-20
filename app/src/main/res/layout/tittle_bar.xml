@@ -20,7 +20,8 @@
         android:layout_weight="3"
         android:layout_width="0dp"
         android:layout_height="40dp"
-        android:background="#E5E5E5"
+
+        android:popupBackground="@color/white"
         android:dropDownVerticalOffset="45dp"
         android:spinnerMode="dropdown" />
 

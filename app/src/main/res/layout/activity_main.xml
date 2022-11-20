@@ -5,12 +5,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/drawer_layout"
     android:orientation="vertical"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="true"
+
+    >
 
     <LinearLayout
+        android:background="@drawable/t1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+
+        >
         <include layout="@layout/tittle_bar"/>
         <androidx.appcompat.widget.SearchView
             android:id="@+id/searview"
@@ -19,10 +24,33 @@
             app:queryHint="请输入搜索的书籍名"
             />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/book_rl"
+
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/book_rl"
+
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            </androidx.recyclerview.widget.RecyclerView>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_margin="16dp"
+                android:src="@drawable/add"
+                app:backgroundTint="@color/purple_200"
+                app:rippleColor="#ffb3b3" />
+
+        </RelativeLayout>
+
+
     </LinearLayout>
 
     <com.google.android.material.navigation.NavigationView
@@ -30,7 +58,8 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:fitsSystemWindows="true">
+        android:fitsSystemWindows="true"
+        android:background="@drawable/t2">
         <include layout="@layout/drawer"/>
     </com.google.android.material.navigation.NavigationView>
 

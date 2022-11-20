@@ -30,7 +30,7 @@ public class Bookbean implements Serializable {
     private String bookPic;//图片
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
-        json.put(JSON_autherName, bookName);
+        json.put(JSON_bookName, bookName);
         json.put(JSON_autherName, autherName);
         json.put(JSON_publisher, publisher);
         json.put(JSON_publishedDate, publishedDate);

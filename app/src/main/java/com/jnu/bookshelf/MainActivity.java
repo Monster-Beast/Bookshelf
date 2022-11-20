@@ -1,5 +1,7 @@
 package com.jnu.bookshelf;
 
+import static com.jnu.bookshelf.DetialActivity.getRealPathFromURI;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -14,21 +16,30 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.jnu.bookshelf.Bean.Bookbean;
 import com.jnu.bookshelf.Bean.Labelbean;
 import com.jnu.bookshelf.adapter.BookRecyclerViewAdapter;
@@ -40,12 +51,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import okhttp3.OkHttpClient;
@@ -53,8 +67,10 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
-
-
+    private FloatingActionButton add;
+    private ActivityResultLauncher Picturerequest;
+    private TextView tv_ID;
+    private ImageView iv_ID;
     private DrawerLayout drawerLayout;//滑动菜单
     private Button button_drawer;
     private TextView drawer_tvlabel;
@@ -67,13 +83,15 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<String> starAdapter;
     SearchView mSearchView;
     private ArrayList<Labelbean> labelbeans=new ArrayList<>();
-
+    private String id;
+    private String id_iv;
 //   private MHandler mHandler;
 private final OkHttpClient client = new OkHttpClient.Builder()
         //添加拦截器
 
         .build();
 private static final int GET = 1;
+private static final int REQUEST_Code= 1;
 private Handler handler = new Handler(new Handler.Callback() {
     @Override
     public boolean handleMessage(@NonNull Message msg) {
@@ -89,8 +107,13 @@ private Handler handler = new Handler(new Handler.Callback() {
 });
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
+        Picturerequest=registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),result ->{
+
+        });
         requestDataLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
 
         });
@@ -102,7 +125,7 @@ private Handler handler = new Handler(new Handler.Callback() {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode==RESULT_OK) {
+        if(resultCode==5) {
 
             this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setBookName(data.getStringExtra("BookName"));
             this.data.get(bookRecyclerViewAdapter.getContextMenuPosition()).setAutherName(data.getStringExtra("autherName"));
@@ -157,18 +180,31 @@ private Handler handler = new Handler(new Handler.Callback() {
                 bookbean.setId(book.size());
                 book.add(bookbean);
             }
+            try {
+                Save();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }else if(data!=null){
+            iv_ID.setImageURI(data.getData());
+            SharedPreferences sp=MainActivity.this.getSharedPreferences("Data",Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor=sp.edit();
+            editor.putString("ID_iv",getRealPathFromURI(this,data.getData()));
+            editor.commit();
+
         }
-        try {
-            Save();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+
         bookRecyclerViewAdapter.notifyDataSetChanged();
         drawerRecyclerViewAdapter.notifyDataSetChanged();
         initSpinner();
 
     }
-
+    public void communication(int requestCode){
+        if(requestCode==REQUEST_Code){
+            Intent intent =new Intent(MainActivity.this,DetialActivity.class);
+            requestDataLauncher.launch(intent);
+        }
+    }
     public void communication(){
 
         Intent intent =new Intent(MainActivity.this,DetialActivity.class);
@@ -245,10 +281,14 @@ private Handler handler = new Handler(new Handler.Callback() {
 //        Log.i("monster",R.drawable.santi+"");
 //        Log.i("monster",R.drawable.huozhe+"");
 //        Log.i("monster",R.drawable.anzhou+"");
+        SharedPreferences sp=MainActivity.this.getSharedPreferences("Data",Context.MODE_PRIVATE);
 
+        id=sp.getString("ID","ID");
+        id_iv=sp.getString("ID_iv",null);
         try {
             //打开存放在assets文件夹下面的json格式的文件并且放在文件输入流里面
-            InputStreamReader inputStreamReader = new InputStreamReader(getAssets().open("Book.json"), "UTF-8");
+            InputStreamReader inputStreamReader=new InputStreamReader(openFileInput("Book.json"));
+            //InputStreamReader inputStreamReader = new InputStreamReader(getAssets().open("Book.json"), "UTF-8");
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
             String line;
             StringBuilder stringBuilder = new StringBuilder();
@@ -421,6 +461,13 @@ private void parseJSONWithJSONObject(String JsonData) {
         initTittleBar();
         initSearch();
         initRecycler();
+        add=findViewById(R.id.fab);
+        add.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                communication(REQUEST_Code);
+            }
+        });
     }
     private void initSearch(){
         mSearchView=findViewById(R.id.searview);
@@ -469,7 +516,50 @@ private void parseJSONWithJSONObject(String JsonData) {
 
     private void initDrawer_in(){
 
+        iv_ID=findViewById(R.id.ID_iv);
+        if(id_iv!=null) {
+            Bitmap bitmap = BitmapFactory.decodeFile(id_iv);
+            iv_ID.setImageBitmap(bitmap);
 
+        }
+        iv_ID.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK, null);
+                intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
+                Picturerequest.launch(intent);
+            }
+        });
+        tv_ID=findViewById(R.id.tv_id);
+        tv_ID.setText(id);
+        tv_ID.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final EditText editText = new EditText(MainActivity.this);
+                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("请输入要设置的ID").setView(editText).setPositiveButton("确定",new  DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        if(editText.getText().toString().equals("")){
+                            Toast.makeText(MainActivity.this,"空文本无效",Toast.LENGTH_SHORT).show();
+                        }else{
+                            SharedPreferences sp=MainActivity.this.getSharedPreferences("Data",Context.MODE_PRIVATE);
+                            SharedPreferences.Editor editor=sp.edit();
+                            editor.putString("ID",editText.getText().toString());
+                            tv_ID.setText(editText.getText());
+                            editor.commit();
+                        }
+                    }
+                }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+                builder.show();
+            }
+        });
         drawer_tvlabel=findViewById(R.id.drawer_addlabel);
         drawer_tvlabel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -493,7 +583,7 @@ private void parseJSONWithJSONObject(String JsonData) {
                     }
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                    if(editText.getText().equals("")){
+                    if(editText.getText().toString().equals("")){
                         Toast.makeText(MainActivity.this,"空文本无效",Toast.LENGTH_SHORT).show();
                     }else if(match(editText.getText().toString())){
                         Toast.makeText(MainActivity.this,"标签已存在",Toast.LENGTH_SHORT).show();
@@ -553,6 +643,7 @@ private void parseJSONWithJSONObject(String JsonData) {
         starAdapter.setDropDownViewResource(R.layout.item_drapdown);
         //从布局文件中获取名叫sp_dialog的下拉框
         Spinner sp = findViewById(R.id.spinner);
+
         //设置下拉框的数组适配器
         sp.setAdapter(starAdapter);
         //设置下拉框默认的显示第一项
@@ -619,7 +710,7 @@ private void parseJSONWithJSONObject(String JsonData) {
             OutputStream out = this.openFileOutput("Book.json",
                     Context.MODE_PRIVATE);
             writer = new OutputStreamWriter(out);
-            writer.write(array.toString());
+            writer.write("{\"book\""+":"+array.toString()+"}");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
